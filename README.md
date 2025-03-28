@@ -2,6 +2,8 @@
 
 ![SalarySplit Banner](https://github.com/Skarycloud/salary-split/blob/master/salarysplit.png)
 
+## 🔗 [Live Demo](https://salary-split-three.vercel.app/)
+
 ## 📊 About The Project
 
 SalarySplit is an interactive web application that helps you understand your earnings across different time periods. Built with Next.js and Tailwind CSS, it provides an intuitive interface to break down annual salaries into monthly, weekly, daily, and hourly rates, with support for multiple currencies.
