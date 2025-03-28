@@ -1,6 +1,6 @@
 # SalarySplit 💰
 
-![SalarySplit Banner](https://github.com/Skarycloud/salary-split/blob/main/salarysplit.png)
+![SalarySplit Banner](https://github.com/Skarycloud/salary-split/blob/master/salarysplit.png)
 
 ## 📊 About The Project
 
