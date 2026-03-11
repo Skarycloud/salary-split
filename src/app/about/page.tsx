@@ -71,7 +71,7 @@ export default function AboutPage() {
 
         {/* Contact / Footer */}
         <section className="pt-24 pb-12 text-center">
-          <h3 className="text-xl font-semibold mb-8">Let's Connect</h3>
+          <h3 className="text-xl font-semibold mb-8">Let&apos;s Connect</h3>
           <div className="flex items-center justify-center space-x-12">
             {[
               { icon: Github, label: "Code", href: "#" },

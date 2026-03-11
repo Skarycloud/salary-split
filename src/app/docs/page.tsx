@@ -1,7 +1,8 @@
 "use client"
 
-import { Calculator, Clock, Calendar, ShieldCheck, TrendingUp, PieChart, Info, BookOpen, ExternalLink } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Calculator, Clock, Calendar, ShieldCheck, TrendingUp, BookOpen } from "lucide-react"
+import { Card } from "@/components/ui/card"
+import Link from "next/link"
 
 export default function DocsPage() {
   return (
@@ -94,7 +95,7 @@ export default function DocsPage() {
             <div className="flex flex-col md:flex-row gap-12 items-start">
               <div className="flex-1 space-y-6">
                 <p className="text-muted-foreground leading-relaxed">
-                  We support real-time exchange rate simulations for over 10 major global currencies. Whether you're a digital nomad or an international professional, visualize your earnings anywhere.
+                  We support real-time exchange rate simulations for over 10 major global currencies. Whether you&apos;re a digital nomad or an international professional, visualize your earnings anywhere.
                 </p>
                 <div className="p-4 border border-border/40 rounded-2xl bg-background/50 flex items-center justify-between group cursor-help transition-all transform hover:translate-x-1">
                   <div className="flex items-center space-x-3">
@@ -115,10 +116,10 @@ export default function DocsPage() {
         {/* Footer Link */}
         <section className="pt-24 pb-12 text-center border-t border-border/40">
           <p className="text-muted-foreground text-sm mb-6">Ready to see your breakdown?</p>
-          <a href="/" className="inline-flex items-center space-x-2 text-primary font-semibold group border-b border-primary/20 pb-1 hover:border-primary transition-all">
+          <Link href="/" className="inline-flex items-center space-x-2 text-primary font-semibold group border-b border-primary/20 pb-1 hover:border-primary transition-all">
             <span>Back to Calculator</span>
             <Calculator className="h-4 w-4 group-hover:rotate-12 transition-transform" />
-          </a>
+          </Link>
         </section>
       </main>
     </div>
