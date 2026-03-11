@@ -4,118 +4,61 @@
 
 ## 🔗 [Live Demo](https://salary-split-three.vercel.app/)
 
-## 📊 About The Project
+## 📊 Premium Salary Precision & Budgeting
 
-SalarySplit is an interactive web application that helps you understand your earnings across different time periods. Built with Next.js and Tailwind CSS, it provides an intuitive interface to break down annual salaries into monthly, weekly, daily, and hourly rates, with support for multiple currencies.
+SalarySplit is an ultra-minimalist, professional financial tool designed to provide absolute clarity on your earnings. Unlike standard calculators, it empowers you with custom work schedules and automatic smart budgeting insights, all wrapped in a high-end "Google-style" aesthetic.
 
 ### ✨ Key Features
 
-- **💵 Salary Breakdown** - See your annual salary broken down into monthly, weekly, daily, and hourly figures
-- **🌐 Currency Conversion** - Convert your salary between 35+ world currencies
-- **🌓 Dark/Light Mode** - Seamless theme switching to match your preference
-- **📱 Responsive Design** - Works perfectly on all device sizes from mobile to desktop
-- **📥 Data Export** - Download your breakdown data as CSV for further analysis
-- **🔄 Real-time Calculations** - Instant recalculations without page reloads
+- **🎯 Precision Breakdown** - View your annual salary across monthly, weekly, daily, and hourly periods.
+- **⚙️ Adjustable Work Schedule** - Define your exact working days ($1-7$ per week) and hours ($1-24$ per day) for 100% accurate calculations.
+- **📈 Smart Budgeting (50/30/20)** - Instant lifestyle roadmap breaking down your income into Needs (50%), Wants (30%), and Future/Savings (20%).
+- **🌐 Currency Conversion** - Support for 15+ major global currencies with benchmark rates.
+- **🏛️ Multi-Page Architecture** - Dedicated **Docs** for calculation logic and **About** for project mission.
+- **✨ High-End UI** - Minimalist design with subtle animations, glassmorphic accents, and refined typography.
+- **📥 Data Export** - Download your custom breakdown as a clean CSV file.
 
 ## 🛠️ Built With
 
 - [Next.js](https://nextjs.org/) - React framework for production
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- [shadcn/ui](https://ui.shadcn.com/) - Re-usable component library
-- [React Hook Form](https://react-hook-form.com/) - Form validation and handling
-- [Zod](https://github.com/colinhacks/zod) - TypeScript-first schema validation
-- [next-themes](https://github.com/pacocoursey/next-themes) - Theme handling for Next.js
-- [Lucide React](https://lucide.dev/) - Beautiful & consistent icon set
+- [Tailwind CSS v4](https://tailwindcss.com/) - Modern utility-first CSS engine
+- [shadcn/ui](https://ui.shadcn.com/) - Accessible, premium component library
+- [Lucide React](https://lucide.dev/) - High-quality vector iconography
+- [React Hook Form](https://react-hook-form.com/) & [Zod](https://zod.dev/) - Robust validation logic
 
 ## 🚀 Getting Started
 
-Follow these simple steps to get a local copy up and running:
+```sh
+# Clone the repository
+git clone https://github.com/Skarycloud/salary-split.git
 
-### Prerequisites
+# Install dependencies
+npm install
 
-- Node.js (v18 or higher)
-- npm or yarn
+# Run the development server
+npm run dev
+```
 
-### Installation
+## 📋 How It Works
 
-1. Clone the repository
-   ```sh
-   git clone https://github.com/Skarycloud/salary-split.git
-   ```
+1. **Configure Your Earnings**: Enter your gross annual salary and select your primary currency.
+2. **Define Your Schedule**: Input your specific working days per week and hours per day. Our engine dynamically calculates your real-world daily and hourly rates.
+3. **Analyze Results**:
+   - **Periods**: See your earnings across 5 key time units.
+   - **Conversion**: Instantly see what you'd earn in another currency.
+   - **Budget**: See a categorized visual breakdown of how to manage your monthly net pay.
+4. **Export**: Grab your data and take it into your personal spreadsheets.
 
-2. Navigate to the project directory
-   ```sh
-   cd salary-split
-   ```
+## 🤝 Project Mission
 
-3. Install dependencies
-   ```sh
-   npm install
-   # or
-   yarn install
-   ```
-
-4. Run the development server
-   ```sh
-   npm run dev
-   # or
-   yarn dev
-   ```
-
-5. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application
-
-## 📋 Usage
-
-1. **Enter your annual salary** in the input field
-2. **Select your currency** from the dropdown menu
-3. **Click "Calculate"** to see your salary breakdown
-4. **Switch between tabs** to view different breakdowns:
-   - Time Breakdown - See how your salary breaks down across different time periods
-   - Currency Conversion - Convert your salary to different currencies
-5. **Download your data** using the Download buttons for further analysis
-
-## 🎨 Features in Detail
-
-### Currency Support
-
-The application includes support for 35+ currencies with up-to-date exchange rates. All major world currencies are supported, including USD, EUR, GBP, JPY, CAD, AUD, INR, and many more.
-
-### Time Period Calculations
-
-Calculations are based on standard assumptions:
-- 12 months per year
-- 52 weeks per year
-- 260 working days per year (5 days/week, 52 weeks)
-- 8 working hours per day
-
-### Theme Support
-
-Switch between light and dark modes with the theme toggle in the top-right corner. The application also respects your system preferences by default.
-
-## 🤝 Contributing
-
-Contributions make the open-source community an amazing place to learn, inspire, and create. Any contributions to SalarySplit are **greatly appreciated**.
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📝 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
+SalarySplit was built to remove financial fog. We believe everyone deserves a premium-grade tool to understand their time-to-value without ads, tracking, or clutter.
 
 ## 📬 Contact
 
-Sumanth Kumar - [sumanth.k.0202@gmail.com](mailto:sumanth.k.0202@gmail.com)
+**Sumanth Kumar** - Fullstack Dev
 
-GitHub: [https://github.com/Skarycloud](https://github.com/Skarycloud)
-
-LinkedIn: [https://www.linkedin.com/in/sumanth-kumar-230194294](https://www.linkedin.com/in/sumanth-kumar-230194294)
-
-Project Link: [https://github.com/Skarycloud/salary-split](https://github.com/Skarycloud/salary-split)
+[sumanth.k.0202@gmail.com](mailto:sumanth.k.0202@gmail.com) | [GitHub](https://github.com/Skarycloud) | [LinkedIn](https://www.linkedin.com/in/sumanth-kumar-230194294)
 
 ---
 
-<p align="center">Built with ❤️ by Sumanth Kumar</p>
+<p align="center">Built with 💎 by Sumanth Kumar</p>
