@@ -10,9 +10,41 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calculator, Clock, DollarSign, Calendar, CalendarDays, CalendarClock, Download, Loader2 } from "lucide-react"
+import { Clock, DollarSign, Calendar, CalendarDays, CalendarClock, Download, Loader2, Home, ShoppingBag, PiggyBank, PieChart } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Mail, Github, Linkedin } from 'lucide-react';
+
+// Types
+interface FormValues {
+  salary: string;
+  currency: string;
+  workDays: string;
+  workHours: string;
+}
+
+interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+  rate: number;
+}
+
+interface Breakdowns {
+  annual: number;
+  monthly: number;
+  weekly: number;
+  daily: number;
+  hourly: number;
+  budget?: {
+    needs: number;
+    wants: number;
+    savings: number;
+  };
+}
+
+interface FormatCurrencyParams {
+  amount: number;
+  currency: Currency | null;
+}
 
 // Form schema
 const formSchema = z.object({
@@ -21,23 +53,32 @@ const formSchema = z.object({
     .min(1, "Salary is required")
     .refine((val) => !isNaN(Number(val)) && Number(val) > 0, { message: "Salary must be a positive number" }),
   currency: z.string().min(1, "Currency is required"),
+  workDays: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 1 && Number(val) <= 7, { message: "1-7 days" }),
+  workHours: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 1 && Number(val) <= 24, { message: "1-24 hours" }),
 })
 
 export default function SalarySplit() {
   const [breakdowns, setBreakdowns] = useState<Breakdowns | null>(null)
-  const [selectedCurrency, setSelectedCurrency] = useState<{ code: string; name: string; symbol: string; rate: number } | null>(null)
-  const [convertedCurrency, setConvertedCurrency] = useState<{ code: string; name: string; symbol: string; rate: number } | null>(null)
-  const [currencies, setCurrencies] = useState<{ code: string; name: string; symbol: string; rate: number }[]>([])
-  // Removed unused exchangeRates state
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null)
+  const [convertedCurrency, setConvertedCurrency] = useState<Currency | null>(null)
+  const [currencies, setCurrencies] = useState<Currency[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  // Set mounted state
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Initialize form
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       salary: "",
       currency: "USD",
+      workDays: "5",
+      workHours: "8",
     },
   })
 
@@ -46,42 +87,36 @@ export default function SalarySplit() {
     const fetchCurrencyData = async () => {
       try {
         setIsLoading(true)
-
-        // Define fallback currencies in case API fails (removed as unused)
-
-        // Use a more reliable approach with better error handling
         try {
-          // Try to fetch from Open Exchange Rates API (mock)
-          // In a real app, you would use a proper API key and endpoint
-          const mockCurrencies = [
+          const mockCurrencies: Currency[] = [
             { code: "USD", name: "US Dollar", symbol: "$", rate: 1 },
-            { code: "EUR", name: "Euro", symbol: "€", rate: 0.92 },
-            { code: "GBP", name: "British Pound", symbol: "£", rate: 0.79 },
-            { code: "JPY", name: "Japanese Yen", symbol: "¥", rate: 150.14 },
-            { code: "CAD", name: "Canadian Dollar", symbol: "C$", rate: 1.37 },
-            { code: "AUD", name: "Australian Dollar", symbol: "A$", rate: 1.52 },
-            { code: "INR", name: "Indian Rupee", symbol: "₹", rate: 83.12 },
-            { code: "CNY", name: "Chinese Yuan", symbol: "¥", rate: 7.23 },
-            { code: "CHF", name: "Swiss Franc", symbol: "Fr", rate: 0.91 },
-            { code: "HKD", name: "Hong Kong Dollar", symbol: "HK$", rate: 7.82 },
+            { code: "EUR", name: "Euro", symbol: "€", rate: 0.855 },
+            { code: "GBP", name: "British Pound", symbol: "£", rate: 0.7457 },
+            { code: "JPY", name: "Japanese Yen", symbol: "¥", rate: 157.25 },
+            { code: "CAD", name: "Canadian Dollar", symbol: "C$", rate: 1.367 },
+            { code: "AUD", name: "Australian Dollar", symbol: "A$", rate: 1.4075 },
+            { code: "INR", name: "Indian Rupee", symbol: "₹", rate: 91.73 },
+            { code: "CNY", name: "Chinese Yuan", symbol: "¥", rate: 6.888 },
+            { code: "CHF", name: "Swiss Franc", symbol: "Fr", rate: 0.7787 },
+            { code: "HKD", name: "Hong Kong Dollar", symbol: "HK$", rate: 7.821 },
             { code: "SGD", name: "Singapore Dollar", symbol: "S$", rate: 1.35 },
             { code: "NZD", name: "New Zealand Dollar", symbol: "NZ$", rate: 1.64 },
-            { code: "MXN", name: "Mexican Peso", symbol: "$", rate: 16.82 },
-            { code: "BRL", name: "Brazilian Real", symbol: "R$", rate: 5.05 },
+            { code: "MXN", name: "Mexican Peso", symbol: "$", rate: 18.42 },
+            { code: "BRL", name: "Brazilian Real", symbol: "R$", rate: 5.2698 },
             { code: "RUB", name: "Russian Ruble", symbol: "₽", rate: 92.35 },
             { code: "ZAR", name: "South African Rand", symbol: "R", rate: 18.45 },
             { code: "TRY", name: "Turkish Lira", symbol: "₺", rate: 32.15 },
             { code: "SEK", name: "Swedish Krona", symbol: "kr", rate: 10.42 },
             { code: "NOK", name: "Norwegian Krone", symbol: "kr", rate: 10.58 },
-            { code: "DKK", name: "Danish Krone", symbol: "kr", rate: 6.86 },
+            { code: "DKK", name: "Danish Krone", symbol: "kr", rate: 6.4371 },
             { code: "PLN", name: "Polish Złoty", symbol: "zł", rate: 3.94 },
             { code: "ILS", name: "Israeli New Shekel", symbol: "₪", rate: 3.67 },
             { code: "KRW", name: "South Korean Won", symbol: "₩", rate: 1345.2 },
             { code: "THB", name: "Thai Baht", symbol: "฿", rate: 35.76 },
             { code: "IDR", name: "Indonesian Rupiah", symbol: "Rp", rate: 15678.45 },
-            { code: "MYR", name: "Malaysian Ringgit", symbol: "RM", rate: 4.65 },
+            { code: "MYR", name: "Malaysian Ringgit", symbol: "RM", rate: 3.9448 },
             { code: "PHP", name: "Philippine Peso", symbol: "₱", rate: 56.78 },
-            { code: "AED", name: "United Arab Emirates Dirham", symbol: "د.إ", rate: 3.67 },
+            { code: "AED", name: "United Arab Emirates Dirham", symbol: "د.إ", rate: 3.6725 },
             { code: "SAR", name: "Saudi Riyal", symbol: "﷼", rate: 3.75 },
             { code: "HUF", name: "Hungarian Forint", symbol: "Ft", rate: 356.25 },
             { code: "CZK", name: "Czech Koruna", symbol: "Kč", rate: 22.94 },
@@ -90,116 +125,64 @@ export default function SalarySplit() {
             { code: "COP", name: "Colombian Peso", symbol: "$", rate: 3945.67 },
             { code: "RON", name: "Romanian Leu", symbol: "lei", rate: 4.56 },
           ]
-
-          // Sort currencies by code
           mockCurrencies.sort((a, b) => a.code.localeCompare(b.code))
-
           setCurrencies(mockCurrencies)
-
-          // Set default currencies
           const usd = mockCurrencies.find((c) => c.code === "USD") || mockCurrencies[0]
           setSelectedCurrency(usd)
           setConvertedCurrency(usd)
-
           setIsLoading(false)
         } catch (apiError) {
-          console.error("Error with primary API, falling back to defaults:", apiError)
-          throw new Error("Primary API failed")
+          console.error("Currency fetch failed:", apiError)
+          throw new Error("Currency service unavailable")
         }
       } catch (err) {
-        console.error("All API attempts failed, using fallback data:", err)
-
-        // Use fallback currencies
+        console.error("Using fallback currencies:", err)
         const fallbackCurrencies = [
           { code: "USD", name: "US Dollar", symbol: "$", rate: 1 },
-          { code: "EUR", name: "Euro", symbol: "€", rate: 0.92 },
-          { code: "GBP", name: "British Pound", symbol: "£", rate: 0.79 },
+          { code: "EUR", name: "Euro", symbol: "€", rate: 0.855 },
+          { code: "GBP", name: "British Pound", symbol: "£", rate: 0.7457 },
         ];
         setCurrencies(fallbackCurrencies);
         setSelectedCurrency(fallbackCurrencies[0])
         setConvertedCurrency(fallbackCurrencies[0])
-        setError("Using offline currency data. Some currencies may not be available.")
+        setError("Offline mode: Using limited local currency data.")
         setIsLoading(false)
       }
     }
-
     fetchCurrencyData()
   }, [])
 
-  // Removed unused getCurrencySymbol function
-
-  // Handle form submission
-  interface FormValues {
-    salary: string;
-    currency: string;
-  }
-
-  interface Currency {
-    code: string;
-    name: string;
-    symbol: string;
-    rate: number;
-  }
-
-  interface Breakdowns {
-    annual: number;
-    monthly: number;
-    weekly: number;
-    daily: number;
-    hourly: number;
-  }
-
   function onSubmit(values: FormValues) {
     const annualSalary = Number.parseFloat(values.salary);
+    const workDays = Number.parseInt(values.workDays);
+    const workHours = Number.parseInt(values.workHours);
     const currency = currencies.find((c) => c.code === values.currency) as Currency;
     setSelectedCurrency(currency);
-    setConvertedCurrency(currency); // Reset converted currency to match selected
+    setConvertedCurrency(currency);
 
-    // Calculate breakdowns
     const monthly = annualSalary / 12;
     const weekly = annualSalary / 52;
-    const daily = annualSalary / 260; // Assuming 5 working days a week, 52 weeks
-    const hourly = daily / 8; // Assuming 8 working hours per day
+    const daily = annualSalary / (52 * workDays);
+    const hourly = daily / workHours;
 
-    setBreakdowns({
-      annual: annualSalary,
-      monthly,
-      weekly,
-      daily,
-      hourly,
-    } as Breakdowns);
+    // 50/30/20 Budgeting logic (simplified gross breakdown)
+    const budget = {
+      needs: monthly * 0.5,
+      wants: monthly * 0.3,
+      savings: monthly * 0.2,
+    };
+
+    setBreakdowns({ annual: annualSalary, monthly, weekly, daily, hourly, budget });
   }
 
-  // Convert amount to selected currency
-  interface Currency {
-    code: string;
-    name: string;
-    symbol: string;
-    rate: number;
-  }
-
-  function convertCurrency(
-    amount: number,
-    fromCurrency: Currency | null,
-    toCurrency: Currency | null
-  ): number {
+  function convertCurrency(amount: number, fromCurrency: Currency | null, toCurrency: Currency | null): number {
     if (!fromCurrency || !toCurrency) return amount;
-
-    // Convert to USD first (if not already USD)
     const amountInUSD = fromCurrency.code === "USD" ? amount : amount / fromCurrency.rate;
-    // Then convert from USD to target currency
     return toCurrency.code === "USD" ? amountInUSD : amountInUSD * toCurrency.rate;
-  }
-
-  // Format currency
-  interface FormatCurrencyParams {
-    amount: number;
-    currency: Currency | null;
   }
 
   function formatCurrency({ amount, currency }: FormatCurrencyParams): string {
     if (!currency) return amount.toFixed(2);
-
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currency.code,
@@ -208,27 +191,18 @@ export default function SalarySplit() {
     }).format(amount);
   }
 
-  // Download breakdown data as CSV
   function downloadBreakdown() {
     if (!breakdowns || !selectedCurrency) return
-
-    // Create CSV content
     let csvContent = "Time Period,In Original Currency,In Converted Currency\n"
-
-    // Add rows for each time period
     csvContent += `Annual,${formatCurrency({ amount: breakdowns.annual, currency: selectedCurrency })},${formatCurrency({ amount: convertCurrency(breakdowns.annual, selectedCurrency, convertedCurrency), currency: convertedCurrency })}\n`
     csvContent += `Monthly,${formatCurrency({ amount: breakdowns.monthly, currency: selectedCurrency })},${formatCurrency({ amount: convertCurrency(breakdowns.monthly, selectedCurrency, convertedCurrency), currency: convertedCurrency })}\n`
     csvContent += `Weekly,${formatCurrency({ amount: breakdowns.weekly, currency: selectedCurrency })},${formatCurrency({ amount: convertCurrency(breakdowns.weekly, selectedCurrency, convertedCurrency), currency: convertedCurrency })}\n`
     csvContent += `Daily,${formatCurrency({ amount: breakdowns.daily, currency: selectedCurrency })},${formatCurrency({ amount: convertCurrency(breakdowns.daily, selectedCurrency, convertedCurrency), currency: convertedCurrency })}\n`
     csvContent += `Hourly,${formatCurrency({ amount: breakdowns.hourly, currency: selectedCurrency })},${formatCurrency({ amount: convertCurrency(breakdowns.hourly, selectedCurrency, convertedCurrency), currency: convertedCurrency })}\n`
-
-    // Add metadata
     csvContent += `\nOriginal Currency,${selectedCurrency.name} (${selectedCurrency.code})\n`
     csvContent += `Converted Currency,${convertedCurrency?.name || "N/A"} (${convertedCurrency?.code || "N/A"})\n`
     csvContent += `Exchange Rate,1 ${selectedCurrency.code} = ${convertedCurrency ? (convertedCurrency.rate / selectedCurrency.rate).toFixed(4) : "N/A"} ${convertedCurrency?.code || "N/A"}\n`
     csvContent += `\nGenerated by SalarySplit on ${new Date().toLocaleDateString()}\n`
-
-    // Create a blob and download link
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
@@ -240,24 +214,15 @@ export default function SalarySplit() {
     document.body.removeChild(link)
   }
 
-  // Download currency list as CSV
   function downloadCurrencyList() {
     if (!currencies.length) return
-
-    // Create CSV content
     let csvContent = "Currency Code,Currency Name,Symbol,Exchange Rate (vs USD)\n"
-
-    // Add rows for each currency
     currencies.forEach((currency) => {
       csvContent += `${currency.code},${currency.name},${currency.symbol},${currency.rate}\n`
     })
-
-    // Add metadata
     csvContent += `\nExchange rates as of ${new Date().toLocaleDateString()}\n`
-    csvContent += `Source: exchangerate.host\n`
+    csvContent += `Source: Financial Markets (Ref: USD)\n`
     csvContent += `Generated by SalarySplit\n`
-
-    // Create a blob and download link
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
@@ -270,399 +235,288 @@ export default function SalarySplit() {
   }
 
   return (
-    <div className="container mx-auto py-10 px-4">
-      <div className="flex flex-col items-center space-y-8 mb-10">
-        <div className="flex items-center space-x-2">
-          <Calculator className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">SalarySplit</h1>
-        </div>
-        <p className="text-muted-foreground text-center max-w-2xl">
-          Enter your annual salary to see how it breaks down by month, week, day, and hour. You can also convert your
-          earnings to different currencies.
-        </p>
-      </div>
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary/10">
+      <div className="max-w-2xl mx-auto py-16 px-6 lg:px-8 flex flex-col">
+        {error && (
+          <div className="w-full bg-destructive/5 text-destructive border border-destructive/10 p-4 rounded-xl mb-12 animate-in fade-in duration-500">
+            <p className="text-sm font-medium text-center">{error}</p>
+          </div>
+        )}
 
-      {error && (
-        <div className="bg-destructive/15 text-destructive p-4 rounded-lg mb-6">
-          <p>{error}</p>
-        </div>
-      )}
-
-      <div className="grid gap-8 md:grid-cols-[1fr_1.5fr]">
-        <div className="space-y-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Enter Your Salary</CardTitle>
-              <CardDescription>Provide your annual salary (Cost to Company) details</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-              ) : (
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <FormField
-                      control={form.control}
-                      name="salary"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Annual Salary</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                              <Input className="pl-10" placeholder="e.g. 75000" {...field} />
-                            </div>
-                          </FormControl>
-                          <FormDescription>Enter your total annual salary before taxes</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="currency"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Currency</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select currency" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="max-h-[300px]">
-                              {currencies.map((currency) => (
-                                <SelectItem key={currency.code} value={currency.code}>
-                                  {currency.symbol} {currency.name} ({currency.code})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>Select the currency of your salary</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit" className="w-full">
-                      Calculate
-                    </Button>
-                  </form>
-                </Form>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Currency List</CardTitle>
-              <CardDescription>Download the complete list of available currencies and exchange rates</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm text-muted-foreground mb-4">
-                <p>Our application uses a comprehensive list of world currencies with their exchange rates.</p>
-                <p className="mt-2">
-                  The list includes {currencies.length} major currencies with their current exchange rates against USD.
-                </p>
+        <main className="w-full space-y-16">
+          <section className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+            <div className="space-y-10">
+              <div className="text-center space-y-3">
+                <h2 className="text-2xl font-semibold tracking-tight">Know Your True Earnings</h2>
+                <p className="text-muted-foreground">Break down your annual salary into precision periods and a smart budget.</p>
               </div>
-              <Button
-                onClick={downloadCurrencyList}
-                className="w-full"
-                variant="outline"
-                disabled={isLoading || currencies.length === 0}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading Currencies
-                  </>
-                ) : (
-                  <>
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Currency List
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+              
+              <Card className="border-none shadow-none bg-transparent">
+                <CardContent className="p-0">
+                  {isLoading ? (
+                    <div className="space-y-8">
+                      <Skeleton className="h-16 w-full opacity-50" />
+                      <div className="grid grid-cols-2 gap-4">
+                        <Skeleton className="h-16 w-full opacity-50" />
+                        <Skeleton className="h-16 w-full opacity-50" />
+                      </div>
+                      <Skeleton className="h-16 w-full opacity-50" />
+                    </div>
+                  ) : (
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+                        <FormField
+                          control={form.control}
+                          name="salary"
+                          render={({ field }) => (
+                            <FormItem className="space-y-3">
+                              <FormLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">Annual Salary</FormLabel>
+                              <FormControl>
+                                <div className="relative group">
+                                  <DollarSign className="absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                  <Input className="pl-8 h-14 text-3xl font-medium border-0 border-b rounded-none focus-visible:ring-0 focus-visible:border-primary transition-all bg-transparent" placeholder="75,000" {...field} />
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-        {breakdowns ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Salary Breakdown</CardTitle>
-              <CardDescription>See how your annual salary breaks down into smaller time periods</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <Tabs defaultValue="breakdown">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="breakdown">Time Breakdown</TabsTrigger>
-                  <TabsTrigger value="conversion">Currency Conversion</TabsTrigger>
+                        <div className="grid grid-cols-2 gap-8">
+                          <FormField
+                            control={form.control}
+                            name="workDays"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">Days / Week</FormLabel>
+                                <FormControl>
+                                  <Input className="h-14 border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary transition-all bg-transparent text-2xl font-medium" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="workHours"
+                            render={({ field }) => (
+                              <FormItem className="space-y-3">
+                                <FormLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">Hours / Day</FormLabel>
+                                <FormControl>
+                                  <Input className="h-14 border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary transition-all bg-transparent text-2xl font-medium" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="currency"
+                          render={({ field }) => (
+                            <FormItem className="space-y-3">
+                              <FormLabel className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80">Currency</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger className="w-full h-14 border-0 border-b rounded-none px-0 focus:ring-0 focus:ring-offset-0 focus:border-primary transition-all bg-transparent text-lg">
+                                    <SelectValue placeholder="Select currency" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="max-h-[350px]">
+                                  {currencies.map((currency) => (
+                                    <SelectItem key={currency.code} value={currency.code} className="py-3 focus:bg-primary/5">
+                                      <div className="flex items-center gap-4">
+                                        <span className="font-mono text-primary/60 font-semibold w-8 text-center">{currency.symbol}</span>
+                                        <span className="text-sm font-medium">{currency.name}</span>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button type="submit" className="w-full h-14 text-lg font-medium transition-all hover:opacity-90 active:scale-[0.98] rounded-2xl shadow-lg shadow-primary/10">
+                          Calculate Breakdown
+                        </Button>
+                      </form>
+                    </Form>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+
+          {breakdowns && (
+            <section className="animate-in fade-in slide-in-from-bottom-6 duration-1000 space-y-12">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-primary/5 rounded-lg">
+                    <PieChart className="h-5 w-5 text-primary" />
+                  </div>
+                  <h2 className="text-2xl font-semibold tracking-tight">Your Breakdown</h2>
+                </div>
+                <Button variant="ghost" size="sm" onClick={downloadBreakdown} className="text-muted-foreground hover:text-primary rounded-lg">
+                  <Download className="h-4 w-4 mr-2" />
+                  CSV
+                </Button>
+              </div>
+
+              <Tabs defaultValue="breakdown" className="w-full">
+                <TabsList className="w-full h-12 grid grid-cols-3 p-1 bg-muted/40 rounded-xl mb-12">
+                  <TabsTrigger value="breakdown" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Periods</TabsTrigger>
+                  <TabsTrigger value="conversion" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Conversion</TabsTrigger>
+                  <TabsTrigger value="budget" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Budget</TabsTrigger>
                 </TabsList>
-                <TabsContent value="breakdown" className="space-y-4">
-                  <div className="grid gap-4">
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <Calendar className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">Annual</p>
-                          <p className="text-sm text-muted-foreground">Yearly salary</p>
-                        </div>
-                      </div>
-                      <p className="text-xl font-bold">{formatCurrency({ amount: breakdowns.annual, currency: selectedCurrency })}</p>
-                    </div>
 
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <CalendarDays className="h-5 w-5 text-primary" />
+                <TabsContent value="breakdown" className="space-y-2">
+                  {[
+                    { label: "Annual", desc: "Yearly total", val: breakdowns.annual, icon: Calendar },
+                    { label: "Monthly", desc: "Per month", val: breakdowns.monthly, icon: CalendarDays },
+                    { label: "Weekly", desc: "Per week", val: breakdowns.weekly, icon: CalendarClock },
+                    { label: "Daily", desc: "Per day", val: breakdowns.daily, icon: Clock },
+                    { label: "Hourly", desc: "Per hour", val: breakdowns.hourly, icon: Clock },
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between py-6 border-b border-border/40 last:border-0 group transition-all">
+                      <div className="flex items-center space-x-6">
+                        <div className="p-3 bg-muted/30 rounded-2xl group-hover:bg-primary/5 transition-colors">
+                          <item.icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium">Monthly</p>
-                          <p className="text-sm text-muted-foreground">Per month</p>
+                          <p className="text-sm font-semibold tracking-tight">{item.label}</p>
+                          <p className="text-xs text-muted-foreground/60">{item.desc}</p>
                         </div>
                       </div>
-                      <p className="text-xl font-bold">{formatCurrency({ amount: breakdowns.monthly, currency: selectedCurrency })}</p>
+                      <p className="text-2xl font-mono tracking-tighter font-semibold">
+                        {formatCurrency({ amount: item.val, currency: selectedCurrency })}
+                      </p>
                     </div>
+                  ))}
 
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <CalendarClock className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">Weekly</p>
-                          <p className="text-sm text-muted-foreground">Per week</p>
-                        </div>
-                      </div>
-                      <p className="text-xl font-bold">{formatCurrency({ amount: breakdowns.weekly, currency: selectedCurrency })}</p>
-                    </div>
+                  <p className="text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em] text-center mt-10">
+                    Based on {form.getValues("workDays")}d / week, {form.getValues("workHours")}h / day schedule
+                  </p>
+                </TabsContent>
 
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <Clock className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">Daily</p>
-                          <p className="text-sm text-muted-foreground">Per working day</p>
-                        </div>
-                      </div>
-                      <p className="text-xl font-bold">{formatCurrency({ amount: breakdowns.daily, currency: selectedCurrency })}</p>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <Clock className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">Hourly</p>
-                          <p className="text-sm text-muted-foreground">Per working hour</p>
-                        </div>
-                      </div>
-                      <p className="text-xl font-bold">{formatCurrency({ amount: breakdowns.hourly, currency: selectedCurrency })}</p>
-                    </div>
+                <TabsContent value="conversion" className="space-y-10">
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/80 ml-1">Target Currency</label>
+                    <Select
+                      defaultValue={convertedCurrency?.code || "USD"}
+                      onValueChange={(val) => setConvertedCurrency(currencies.find(c => c.code === val) || null)}
+                    >
+                      <SelectTrigger className="w-full h-14 border-0 border-b rounded-none px-0 focus:ring-0 focus:ring-offset-0 focus:border-primary transition-all bg-transparent text-lg">
+                        <SelectValue placeholder="Select target currency" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[350px]">
+                        {currencies.map((currency) => (
+                          <SelectItem key={currency.code} value={currency.code} className="py-3 focus:bg-primary/5">
+                            <div className="flex items-center gap-4">
+                              <span className="font-mono text-primary/60 font-semibold w-8 text-center">{currency.symbol}</span>
+                              <span className="text-sm font-medium">{currency.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  <div className="text-sm text-muted-foreground mt-4">
-                    <p>* Calculations assume:</p>
-                    <ul className="list-disc list-inside ml-2">
-                      <li>12 months per year</li>
-                      <li>52 weeks per year</li>
-                      <li>260 working days per year (5 days/week, 52 weeks)</li>
-                      <li>8 working hours per day</li>
-                    </ul>
+                  <div className="p-5 bg-muted/20 rounded-2xl border border-border/30 inline-block">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60 mb-1">Exchange Rate</p>
+                    <p className="text-sm font-medium">
+                      1 {selectedCurrency?.code} = {((convertedCurrency?.rate || 1) / (selectedCurrency?.rate || 1)).toFixed(4)} {convertedCurrency?.code}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    {[
+                      { label: "Annual", val: breakdowns.annual },
+                      { label: "Monthly", val: breakdowns.monthly },
+                      { label: "Hourly", val: breakdowns.hourly },
+                    ].map((item, idx) => (
+                      <div key={idx} className="flex justify-between items-center py-6 border-b border-border/40 last:border-0 transition-all">
+                         <span className="text-sm font-semibold tracking-tight">{item.label}</span>
+                         <span className="text-2xl font-mono tracking-tighter font-bold text-primary">
+                           {formatCurrency({ amount: convertCurrency(item.val, selectedCurrency, convertedCurrency), currency: convertedCurrency })}
+                         </span>
+                      </div>
+                    ))}
                   </div>
                 </TabsContent>
 
-                <TabsContent value="conversion" className="space-y-4">
-                  <div className="space-y-4">
-                    <div className="flex flex-col space-y-2">
-                      <p className="text-sm font-medium">Convert your annual salary to:</p>
-                      <Select
-                        defaultValue={convertedCurrency?.code || "USD"}
-                        onValueChange={(value) => {
-                          const currency = currencies.find((c) => c.code === value)
-                          if (currency) {
-                            setConvertedCurrency(currency)
-                          }
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select currency" />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[300px]">
-                          {currencies.map((currency) => (
-                            <SelectItem key={currency.code} value={currency.code}>
-                              {currency.symbol} {currency.name} ({currency.code})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                <TabsContent value="budget" className="space-y-12">
+                  <div className="text-center space-y-3 mb-4 animate-in fade-in duration-700">
+                    <h3 className="text-xl font-semibold tracking-tight">50/30/20 Rule</h3>
+                    <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                      Manage your {formatCurrency({ amount: breakdowns.monthly, currency: selectedCurrency })} monthly income with clarity.
+                    </p>
+                  </div>
 
-                    <Card>
-                      <CardContent className="pt-6">
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <p className="text-sm">Original Currency:</p>
-                            <p className="font-medium">
-                              {selectedCurrency?.name} ({selectedCurrency?.symbol})
-                            </p>
-                          </div>
-                          <div className="flex justify-between">
-                            <p className="text-sm">Converted Currency:</p>
-                            <p className="font-medium">
-                              {convertedCurrency?.name} ({convertedCurrency?.symbol})
-                            </p>
-                          </div>
-                          <div className="flex justify-between">
-                            <p className="text-sm">Exchange Rate:</p>
-                            <p className="font-medium">
-                              1 {selectedCurrency?.code} ={" "}
-                              {((convertedCurrency?.rate || 1) / (selectedCurrency?.rate || 1)).toFixed(4)}{" "}
-                              {convertedCurrency?.code}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <div className="grid gap-4 mt-4">
-                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <p className="font-medium">Annual</p>
-                        <p className="text-xl font-bold">
-                          {formatCurrency(
-                            { amount: convertCurrency(breakdowns.annual, selectedCurrency, convertedCurrency), currency: convertedCurrency },
-                          )}
-                        </p>
+                  <div className="space-y-6">
+                    {[
+                      { 
+                        label: "Needs (50%)", 
+                        val: breakdowns.budget?.needs || 0, 
+                        desc: "Rent, Groceries, Utilities, Health", 
+                        icon: Home,
+                        color: "text-blue-600",
+                        bg: "bg-blue-500/10",
+                        bar: "bg-blue-500"
+                      },
+                      { 
+                        label: "Wants (30%)", 
+                        val: breakdowns.budget?.wants || 0, 
+                        desc: "Dining out, Hobbies, Subscriptions", 
+                        icon: ShoppingBag,
+                        color: "text-amber-600",
+                        bg: "bg-amber-500/10",
+                        bar: "bg-amber-500"
+                      },
+                      { 
+                        label: "Future (20%)", 
+                        val: breakdowns.budget?.savings || 0, 
+                        desc: "Savings, Investments, Debt Repayment", 
+                        icon: PiggyBank,
+                        color: "text-emerald-600",
+                        bg: "bg-emerald-500/10",
+                        bar: "bg-emerald-500"
+                      },
+                    ].map((item, idx) => (
+                      <div key={idx} className="p-8 bg-card ring-1 ring-border/20 rounded-[2rem] transition-all hover:ring-primary/20 hover:shadow-xl hover:shadow-primary/5 group">
+                         <div className="flex justify-between items-start mb-6">
+                           <div className="flex items-center space-x-4">
+                             <div className={`p-3 rounded-2xl ${item.bg} ${item.color}`}>
+                               <item.icon className="h-6 w-6" />
+                             </div>
+                             <div>
+                               <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${item.color}`}>
+                                 {item.label}
+                               </span>
+                               <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+                             </div>
+                           </div>
+                           <span className="text-2xl font-mono tracking-tighter font-bold">
+                             {formatCurrency({ amount: item.val, currency: selectedCurrency })}
+                           </span>
+                         </div>
+                         <div className="w-full h-2 bg-muted/50 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full opacity-70 transition-all duration-1000 delay-300 ${item.bar}`} 
+                              style={{ width: `${idx === 0 ? 50 : idx === 1 ? 30 : 20}%` }}
+                            />
+                         </div>
                       </div>
-
-                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <p className="font-medium">Monthly</p>
-                        <p className="text-xl font-bold">
-                          {formatCurrency(
-                            { amount: convertCurrency(breakdowns.monthly, selectedCurrency, convertedCurrency), currency: convertedCurrency },
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <p className="font-medium">Weekly</p>
-                        <p className="text-xl font-bold">
-                          {formatCurrency(
-                            { amount: convertCurrency(breakdowns.weekly, selectedCurrency, convertedCurrency), currency: convertedCurrency },
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <p className="font-medium">Daily</p>
-                        <p className="text-xl font-bold">
-                          {formatCurrency(
-                            { amount: convertCurrency(breakdowns.daily, selectedCurrency, convertedCurrency), currency: convertedCurrency },
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <p className="font-medium">Hourly</p>
-                        <p className="text-xl font-bold">
-                          {formatCurrency(
-                            { amount: convertCurrency(breakdowns.hourly, selectedCurrency, convertedCurrency), currency: convertedCurrency }
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="text-sm text-muted-foreground mt-4">
-                      <p>* Exchange rates are provided by exchangerate.host API and updated regularly.</p>
-                    </div>
+                    ))}
                   </div>
                 </TabsContent>
               </Tabs>
-            </CardContent>
-            <CardFooter>
-              <Button onClick={downloadBreakdown} className="w-full" variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Download Breakdown
-              </Button>
-            </CardFooter>
-          </Card>
-        ) : (
-          <Card className="flex items-center justify-center min-h-[400px]">
-            <CardContent className="text-center">
-              <Calculator className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-medium mb-2">Enter Your Salary</h3>
-              <p className="text-muted-foreground">
-                Fill out the form to see your salary breakdown and currency conversions
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+            </section>
+          )}
+        </main>
 
-       <footer className="mt-12 border-t pt-6 pb-8 text-center">
-      <div className="container mx-auto px-4">
-        <div className="text-sm text-muted-foreground">
-          <p className="mb-2">
-            SalarySplit helps you understand your earnings across different time periods. 
-            This calculator is for informational purposes only and does not account for taxes or deductions.
-          </p>
-          <p className="mb-4">
-            Currency data updated as of {new Date().toLocaleDateString()}
-          </p>
-          
-          {/* Developer information */}
-          <div className="my-6 py-4 border-y border-gray-100">
-            <p className="font-medium text-base mb-1">By Sumanth Kumar</p>
-            <p className="mb-2 text-sm">Front End Dev</p>
-            
-            <div className="flex items-center justify-center space-x-4 mt-3">
-              <a 
-                href="mailto:Sumanth.k.0202@gmail.com" 
-                className="flex items-center text-muted-foreground hover:text-blue-600 transition-colors"
-                aria-label="Email"
-              >
-                <Mail size={18} className="mr-1" />
-                <span className="text-xs">Email</span>
-              </a>
-              <a 
-                href="https://github.com/Skarycloud" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="flex items-center text-muted-foreground hover:text-gray-900 transition-colors"
-                aria-label="GitHub"
-              >
-                <Github size={18} className="mr-1" />
-                <span className="text-xs">GitHub</span>
-              </a>
-              <a 
-                href="https://www.linkedin.com/in/sumanth-kumar-230194294" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="flex items-center text-muted-foreground hover:text-blue-700 transition-colors"
-                aria-label="LinkedIn"
-              >
-                <Linkedin size={18} className="mr-1" />
-                <span className="text-xs">LinkedIn</span>
-              </a>
-            </div>
-          </div>
-          
-          <p className="mt-4 text-xs">
-            © {new Date().getFullYear()} SalarySplit. All rights reserved.
-          </p>
-        </div>
       </div>
-    </footer>
     </div>
   )
 }
-

@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   description: "SalarySplit is an interactive salary calculator that breaks down annual earnings into monthly, weekly, daily, and hourly rates with multi-currency support.",
 };
 
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,7 +30,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Navbar />
         {children}
+        <Footer />
       </body>
     </html>
   );
