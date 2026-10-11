@@ -153,18 +153,18 @@ export default function SalarySplit() {
                       <FormItem className="space-y-3">
                         <FormLabel className={labelClass}>How often are you paid?</FormLabel>
                         <FormControl>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div role="radiogroup" aria-label="Pay frequency" className="relative grid grid-cols-2 rounded-xl bg-accent p-1">
+                            <span
+                              aria-hidden="true"
+                              className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-lg border-2 border-border bg-card shadow-brutal-sm transition-transform duration-250 [transition-timing-function:cubic-bezier(0.77,0,0.175,1)] motion-reduce:transition-none ${field.value === "annual" ? "translate-x-full" : "translate-x-0"}`}
+                            />
                             {[
                               { label: "Monthly", value: "monthly" as const },
                               { label: "Annual", value: "annual" as const },
                             ].map((option) => (
                               <label
                                 key={option.value}
-                                className={`flex cursor-pointer items-center justify-center gap-3 rounded-base border-2 border-border px-4 py-3 text-sm font-bold transition-all has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-ring ${
-                                  field.value === option.value
-                                    ? "translate-x-[2px] translate-y-[2px] bg-accent text-foreground shadow-brutal-sm"
-                                    : "bg-card text-muted-foreground shadow-brutal hover:bg-secondary hover:text-foreground"
-                                }`}
+                                className={`relative z-10 flex cursor-pointer items-center justify-center rounded-lg px-4 py-3 text-sm font-bold outline-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring ${field.value === option.value ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
                               >
                                 <input
                                   type="radio"
@@ -172,7 +172,7 @@ export default function SalarySplit() {
                                   value={option.value}
                                   checked={field.value === option.value}
                                   onChange={() => field.onChange(option.value)}
-                                  className="h-4 w-4 accent-[var(--color-ink)]"
+                                  className="sr-only"
                                 />
                                 <span>{option.label}</span>
                               </label>
