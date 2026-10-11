@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { DM_Sans, Geist_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const dmSans = DM_Sans({
+  variable: "--font-body",
+  subsets: ["latin"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-display",
   subsets: ["latin"],
 });
 
@@ -13,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Salary Split",
-  description: "SalarySplit is an interactive salary calculator that breaks down annual earnings into monthly, weekly, daily, and hourly rates with multi-currency support.",
+  title: "SalarySplit | Compare job offers with clarity",
+  description: "Compare job offers by annual pay and effective hourly rate, then understand what your salary means month to month.",
 };
 
 import { Navbar } from "@/components/Navbar";
@@ -28,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${dmSans.variable} ${spaceGrotesk.variable} ${geistMono.variable} ambient-sky min-h-screen antialiased`}
       >
         <Navbar />
         {children}

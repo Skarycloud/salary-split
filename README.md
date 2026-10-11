@@ -1,64 +1,36 @@
-# SalarySplit 💰
+# SalarySplit
 
-![SalarySplit Banner](https://github.com/Skarycloud/salary-split/blob/master/salarysplit.png)
+SalarySplit helps people understand salary in context: compare job offers by pay, time commitment and user-entered extras, break one salary into useful pay periods, and plan monthly spending.
 
-## 🔗 [Live Demo](https://salary-split-three.vercel.app/)
+## Features
 
-## 📊 Premium Salary Precision & Budgeting
+- Compare annual or monthly base pay, weekly hours, recurring and sign-on bonuses, optional benefits value, and commute costs.
+- View annual, monthly, weekly, daily and hourly gross-pay equivalents using a custom work week.
+- Convert pay with dated daily reference exchange rates and a clearly labeled offline fallback snapshot.
+- Plan from gross pay or enter take-home pay; compare the plan with real monthly spending.
+- Estimate the work hours behind a purchase and the months needed to reach a savings target.
+- Export a salary breakdown as CSV.
 
-SalarySplit is an ultra-minimalist, professional financial tool designed to provide absolute clarity on your earnings. Unlike standard calculators, it empowers you with custom work schedules and automatic smart budgeting insights, all wrapped in a high-end "Google-style" aesthetic.
+SalarySplit does not estimate taxes or guarantee the value of employer benefits. Offer, budget and currency figures are planning references; exchange rates may differ from bank or card rates.
 
-### ✨ Key Features
+## Navigation
 
-- **🎯 Precision Breakdown** - View your annual salary across monthly, weekly, daily, and hourly periods.
-- **⚙️ Adjustable Work Schedule** - Define your exact working days ($1-7$ per week) and hours ($1-24$ per day) for 100% accurate calculations.
-- **📈 Smart Budgeting (50/30/20)** - Instant lifestyle roadmap breaking down your income into Needs (50%), Wants (30%), and Future/Savings (20%).
-- **🌐 Currency Conversion** - Support for 15+ major global currencies with benchmark rates.
-- **🏛️ Multi-Page Architecture** - Dedicated **Docs** for calculation logic and **About** for project mission.
-- **✨ High-End UI** - Minimalist design with subtle animations, glassmorphic accents, and refined typography.
-- **📥 Data Export** - Download your custom breakdown as a clean CSV file.
+The floating navigation keeps the two main tools—Salary breakdown and Compare offers—in a sliding tab switch. Guide and About sit alongside as secondary links. The active tool remains selected while browsing those secondary pages.
 
-## 🛠️ Built With
-
-- [Next.js](https://nextjs.org/) - React framework for production
-- [Tailwind CSS v4](https://tailwindcss.com/) - Modern utility-first CSS engine
-- [shadcn/ui](https://ui.shadcn.com/) - Accessible, premium component library
-- [Lucide React](https://lucide.dev/) - High-quality vector iconography
-- [React Hook Form](https://react-hook-form.com/) & [Zod](https://zod.dev/) - Robust validation logic
-
-## 🚀 Getting Started
+## Run locally
 
 ```sh
-# Clone the repository
-git clone https://github.com/Skarycloud/salary-split.git
-
-# Install dependencies
 npm install
-
-# Run the development server
 npm run dev
 ```
 
-## 📋 How It Works
+Production build:
 
-1. **Configure Your Earnings**: Enter your gross annual salary and select your primary currency.
-2. **Define Your Schedule**: Input your specific working days per week and hours per day. Our engine dynamically calculates your real-world daily and hourly rates.
-3. **Analyze Results**:
-   - **Periods**: See your earnings across 5 key time units.
-   - **Conversion**: Instantly see what you'd earn in another currency.
-   - **Budget**: See a categorized visual breakdown of how to manage your monthly net pay.
-4. **Export**: Grab your data and take it into your personal spreadsheets.
+```sh
+npm run build
+npm start
+```
 
-## 🤝 Project Mission
+## How data is handled
 
-SalarySplit was built to remove financial fog. We believe everyone deserves a premium-grade tool to understand their time-to-value without ads, tracking, or clutter.
-
-## 📬 Contact
-
-**Sumanth Kumar** - Fullstack Dev
-
-[sumanth.k.0202@gmail.com](mailto:sumanth.k.0202@gmail.com) | [GitHub](https://github.com/Skarycloud) | [LinkedIn](https://www.linkedin.com/in/sumanth-kumar-230194294)
-
----
-
-<p align="center">Built with 💎 by Sumanth Kumar</p>
+There is no account or database. Salary inputs are held in session storage in the current browser tab so the result page can load without placing salary figures in the URL. Currency requests are handled by the app's exchange-rate route, which fetches daily Frankfurter reference rates and uses a dated fallback snapshot if the provider is unavailable.
